@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/jclanc7507/zookeeper/issues"
   },
-  "homepage": "https://github.com/jclanc7507/zookeeper#readme"
+  "homepage": "https://github.com/jclanc7507/zookeeper#readme",
+  "dependencies": {
+    "express": "^4.17.3"
+  }
 }
