@@ -1,31 +1,24 @@
 const fs = require('fs');
 const path = require('path');
-
-const { animals } = require('./data/animals');
 const express = require('express');
+const { animals } = require('./data/animals');
+
 const PORT = process.env.PORT || 3001;
 const app = express();
-// 11.2.7 <--
+
+app.use(express.urlencoded({ extend: true }));
+app.use(express.json());
+
 function filterByQuery(query, animalsArray) {
     let personalityTraitsArray = [];
     let filteredResults = animalsArray;
     if (query.personalityTraits) {
-        // Save personalityTraits as a dedicated array.
-        // If personalityTraits is a string, place it into a new array and save.
         if (typeof query.personalityTraits === 'string') {
             personalityTraitsArray = [query.personalityTraits];
         } else {
             personalityTraitsArray = query.personalityTraits;
         }
-        // loop through each trait in the personalityTraits array:
         personalityTraitsArray.forEach(trait => {
-            // Check the trait against each animal in the filteredResults array.
-            // Remember, it is initially a copy of the animalsArray,
-            // but here we're updating it for each trait in the .forEach() loop.
-            // For each trait being targeted by the filter, the filteredResults
-            // array will then contain only the entries that contain the trait,
-            // so at the end we'll have an array of animals that have every one 
-            // of the traits when the .forEach() loop is finished.
             filteredResults = filteredResults.filter(
                 animal => animal.personalityTraits.indexOf(trait) !== -1
             );
@@ -55,9 +48,6 @@ function createNewAnimal(body, animalsArray) {
         path.join(__dirname, './data/animals.json'),
         JSON.stringify({ animals: animalsArray }, null, 2)
     );
-    console.log(body);
-
-    // return finished conde to post route for response
     return animal;
 }
 
@@ -78,9 +68,11 @@ function validateAnimal(animal) {
 }
 
 app.get('./api/animals', (req, res) => {
-    // req. body is where our incoming content will go
-    console.log(req.body);
-    res.json(req.body);
+    let results = animals;
+    if (req.query) {
+        results = filterByQuery(req.query, results);
+    }
+    res.json(results);
 });
 
 app.get('/api/animals/:id', (req, res) => {
@@ -96,7 +88,6 @@ app.post('/api/animals', (req, res) => {
     // set id based on what the next index of the array will be
     req.body.id = animals.length.toString();
 
-    // if any data in req.body is incorrect, send 400 error back
     if (!validateAnimal(req.body)) {
         res.status(400).send('The animal is not properly formatted.');
     } else {
@@ -105,14 +96,6 @@ app.post('/api/animals', (req, res) => {
     }
 });
 
-// parse incoming string or array data
-app.use(express.urlencoded({ extended: true }));
-
-// parse incoming JSON data
-app.use(express.json());
-
 app.listen(PORT, () => {
     console.log('API server now on port ${PORT}.');
 });
-
-//http://localhost:3001/api/animals
